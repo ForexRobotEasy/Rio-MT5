@@ -1,0 +1,81 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                             Rio MT5              |
+//|                             Developer's site: forexroboteasy.com |
+//|                              Developed by: Forex Robot Easy Team |
+//+------------------------------------------------------------------+
+
+//--- Include necessary libraries
+#include <Trade\Trade.mqh>
+#include <Trade\PositionInfo.mqh>
+#include <Indicators\Trend.mqh>
+#include <Indicators\MovingAverages.mqh>
+
+//--- Define necessary variables
+input double lotSize = 0.01; // Default lot size for trading
+input int stopLoss = 100;    // Default stop loss in pips
+input int takeProfit = 200;  // Default take profit in pips
+
+CTrade trade;          // Trading class object
+CPositionInfo posInfo; // Position information class object
+CTrend trend;          // Trend indicator class object
+CMovingAverages ma;    // Moving averages indicator class object
+
+//+------------------------------------------------------------------+
+//| Custom indicator initialization function                         |
+//+------------------------------------------------------------------+
+void OnInit()
+{
+   //--- Initialize trading and position information classes
+   trade.SetExpertName('Rio MT5');
+   posInfo.SetExpertName('Rio MT5');
+
+   //--- Initialize trend and moving averages indicators
+   trend.Create();
+   ma.Create();
+}
+
+//+------------------------------------------------------------------+
+//| Custom indicator deinitialization function                       |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+   //--- Deinitialize trend and moving averages indicators
+   trend.Destroy();
+   ma.Destroy();
+}
+
+//+------------------------------------------------------------------+
+//| Custom indicator iteration function                              |
+//+------------------------------------------------------------------+
+void OnCalculate(const int rates_total,
+                 const int prev_calculated,
+                 const datetime& time[],
+                 const double& open[],
+                 const double& high[],
+                 const double& low[],
+                 const double& close[],
+                 const long& tick_volume[],
+                 const long& volume[],
+                 const int& spread[])
+{
+   //--- Check for new trading opportunities
+   if (trend.CheckTrend(time, close) == TREND_UP && ma.CheckMA(time, close) == MA_CROSSOVER_LONG)
+   {
+      //--- Open a buy position
+      if (!posInfo.HasPosition(POSITION_TYPE_BUY))
+      {
+         trade.Buy(lotSize, Symbol(), 0, stopLoss, takeProfit, 'Buy position opened');
+      }
+   }
+   else if (trend.CheckTrend(time, close) == TREND_DOWN && ma.CheckMA(time, close) == MA_CROSSOVER_SHORT)
+   {
+      //--- Open a sell position
+      if (!posInfo.HasPosition(POSITION_TYPE_SELL))
+      {
+         trade.Sell(lotSize, Symbol(), 0, stopLoss, takeProfit, 'Sell position opened');
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
